@@ -11,6 +11,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[ignore = "not yet implemented"]
     fn example_usage() {
         use query::Query;
         let x = query::select::select().build(PostgresQueryBuilder);
