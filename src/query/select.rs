@@ -1,6 +1,6 @@
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 
-use crate::{ColumnTrait, Query};
+use crate::{ColumnTrait, EntityTrait, Query, QueryBuilder, QueryBuilderError, QueryTrait};
 
 pub fn select() -> Select {
     Default::default()
@@ -21,15 +21,36 @@ impl Select {
             )));
         self
     }
+
+    pub fn from<E: EntityTrait>(mut self, from: E) -> Self {
+        self.from_list
+            .push(FromItem::Table(from.table_name().into()));
+        self
+    }
 }
 
-impl Query for Select {}
+impl QueryTrait for Select {
+    fn build<B: QueryBuilder>(self, builder: B) -> Result<String, QueryBuilderError> {
+        builder.build(Query::Select(self))
+    }
+}
 
 #[derive(Debug)]
-enum Expression {
+pub(crate) enum Expression {
     Column(ColumnReference),
     Constant(Value),
     // TODO: Function call, ...
+}
+
+impl Display for Expression {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let to_display = match self {
+            Expression::Column(column_reference) => column_reference.to_string(),
+            Expression::Constant(v) => todo!(),
+        };
+
+        write!(f, "{}", to_display)
+    }
 }
 
 #[derive(Debug)]
@@ -38,6 +59,19 @@ enum ColumnReference {
     TableColumn(Identifier, Identifier), // person.name
     Asterisk,                            // *
     TableAsterisk(Identifier),           // person.*
+}
+
+impl Display for ColumnReference {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let to_display = match self {
+            ColumnReference::Column(column) => column,
+            ColumnReference::TableColumn(table, column) => &format!("{table}.{column}"),
+            ColumnReference::Asterisk => "*",
+            ColumnReference::TableAsterisk(table) => &format!("{table}.*"),
+        };
+
+        write!(f, "{}", to_display)
+    }
 }
 
 type Identifier = String;
@@ -59,7 +93,19 @@ enum Value {
 }
 
 #[derive(Debug)]
-enum FromItem {}
+pub(crate) enum FromItem {
+    Table(Identifier),
+}
+
+impl Display for FromItem {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let to_display = match self {
+            FromItem::Table(table) => table,
+        };
+
+        write!(f, "{}", to_display)
+    }
+}
 
 #[cfg(test)]
 mod test {
@@ -70,7 +116,8 @@ mod test {
     fn test() {
         select()
             .column(person::Column::Id)
-            .column(person::Column::Firstname);
+            .column(person::Column::Firstname)
+            .from(person::Entity);
     }
 }
 

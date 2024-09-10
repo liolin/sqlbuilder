@@ -3,7 +3,7 @@ use crate::query::Query;
 use std::{error::Error, fmt::Display};
 
 pub trait QueryBuilder {
-    fn build<Q: Query>(&self, query: Q) -> Result<String, QueryBuilderError>;
+    fn build(&self, query: Query) -> Result<String, QueryBuilderError>;
 }
 
 #[derive(Debug)]
