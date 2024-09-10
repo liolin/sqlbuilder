@@ -18,3 +18,8 @@ let query = query::select::select()
     .build(PostgresQueryBuilder)
     .unwrap();
 ```
+
+
+## Layering
+The query building does not perform typechecking, just simple strings are generate.
+The higher level API should verify that everything fits

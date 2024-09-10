@@ -12,10 +12,10 @@ pub trait EntityTrait: EntityName {
 }
 
 #[cfg(test)]
-mod test {
+pub mod test {
     use super::*;
 
-    mod person {
+    pub mod person {
         pub struct Model {
             pub id: i32,
             pub firstname: String,
@@ -40,6 +40,16 @@ mod test {
             Id,
             Firstname,
             Lastname,
+        }
+
+        impl ColumnTrait for Column {
+            fn column_name(&self) -> &str {
+                match self {
+                    Self::Id => "id",
+                    Self::Firstname => "firstname",
+                    Self::Lastname => "lastname",
+                }
+            }
         }
     }
 

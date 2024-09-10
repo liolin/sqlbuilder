@@ -1,4 +1,6 @@
-use crate::Query;
+use std::fmt::Debug;
+
+use crate::{ColumnTrait, Query};
 
 pub fn select() -> Select {
     Default::default()
@@ -9,6 +11,16 @@ pub struct Select {
     // TODO: Implement AST for SELECT
     pub(crate) expression_list: Vec<Expression>,
     pub(crate) from_list: Vec<FromItem>,
+}
+
+impl Select {
+    pub fn column<C: ColumnTrait>(mut self, column: C) -> Self {
+        self.expression_list
+            .push(Expression::Column(ColumnReference::Column(
+                column.column_name().into(),
+            )));
+        self
+    }
 }
 
 impl Query for Select {}
@@ -22,11 +34,13 @@ enum Expression {
 
 #[derive(Debug)]
 enum ColumnReference {
-    Column(String),              // name
-    TableColumn(String, String), // person.name
-    Asterisk,                    // *
-    TableAsterisk(String),       // person.*
+    Column(Identifier),                  // name
+    TableColumn(Identifier, Identifier), // person.name
+    Asterisk,                            // *
+    TableAsterisk(Identifier),           // person.*
 }
+
+type Identifier = String;
 
 #[derive(Debug)]
 enum Value {
@@ -46,6 +60,19 @@ enum Value {
 
 #[derive(Debug)]
 enum FromItem {}
+
+#[cfg(test)]
+mod test {
+    use crate::entity::test::person;
+    use crate::select;
+
+    #[test]
+    fn test() {
+        select()
+            .column(person::Column::Id)
+            .column(person::Column::Firstname);
+    }
+}
 
 /* SELECT query according to postgres
 [ WITH [ RECURSIVE ] with_query [, ...] ]
